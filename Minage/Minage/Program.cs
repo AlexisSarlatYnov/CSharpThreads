@@ -12,26 +12,26 @@ namespace Minage
     class Program
     {
         public static int nbMineurs = 10;
-        public static int nbSacsMax = 20000000;
-        public static int nbSacs = 0;
+        public static int nbSacsMax = 100;
+        public static int nbSacsTotal = 0;
         public static int nbPepites = 0;
         public static bool estFini = false;
         public static Object _lock = new Object();
         static void Main(string[] args)
         {
-            /*Console.WriteLine("Minage mine 1 !");
+            Console.WriteLine("Minage mine 1 !");
 
             Minage1();
 
-            nbSacs = 0;
+            nbSacsTotal = 0;
             nbPepites = 0;
-            estFini = false;*/
+            estFini = false;
 
             Console.WriteLine("Minage mine 2 !");
 
             Minage2();
 
-            nbSacs = 0;
+            nbSacsTotal = 0;
             nbPepites = 0;
             estFini = false;
 
@@ -42,12 +42,14 @@ namespace Minage
 
         public static void MineurMiner()
         {
-            while(estFini != true)
+            int nbSacs = 0;
+            while(nbSacs < nbSacsMax)
             {
                 lock (_lock)
                 {
                     nbSacs += 1;
                     nbPepites += MinageThreads.MinagePepitesRandom(Thread.CurrentThread.Name);
+                    nbSacsTotal += 1;
                 }
             }
         }
@@ -56,7 +58,7 @@ namespace Minage
         {
             while (estFini != true)
             {
-                Console.WriteLine("Actuellement nous avons " + nbSacs.ToString() + " sacs avec un total de " + nbPepites.ToString() + " pépites d'or avec pour objectif " + nbSacsMax.ToString() + " sacs d'or ! Il s'agit du travail de " + nbMineurs.ToString() + " mineurs !");
+                Console.WriteLine("Actuellement nous avons " + nbSacsTotal.ToString() + " sacs avec un total de " + nbPepites.ToString() + " pépites d'or avec pour objectif " + nbSacsMax.ToString() + " sacs d'or par mineur ! Il s'agit du travail de " + nbMineurs.ToString() + " mineurs !");
                 Thread.Sleep(100);
             }
         }
@@ -82,19 +84,23 @@ namespace Minage
                 Console.WriteLine("Nom thread : " + threads[i].Name);
             }
 
+            foreach (Thread thread in threads)
+            { thread.Join(); }
+
             while (estFini != true)
             {
-                if (nbSacs >= nbSacsMax)
+                if (nbSacsTotal >= nbSacsMax)
                 {
                     estFini = true;
                 }
             }
 
+
             stopWatch.Stop();
             // Get the elapsed time as a TimeSpan value.
             TimeSpan ts = stopWatch.Elapsed;
 
-            Console.WriteLine("Actuellement nous avons " + nbSacs.ToString() + " sacs avec un total de " + nbPepites.ToString() + " pépites d'or avec pour objectif " + nbSacsMax.ToString() + " sacs d'or ! Il s'agit du travail de " + nbMineurs.ToString() + " mineurs ! Durée du travail : " + ts.ToString() + " !");
+            Console.WriteLine("Actuellement nous avons " + nbSacsTotal.ToString() + " sacs avec un total de " + nbPepites.ToString() + " pépites d'or avec pour objectif " + nbSacsMax.ToString() + " sacs d'or par mineur ! Il s'agit du travail de " + nbMineurs.ToString() + " mineurs ! Durée du travail : " + ts.ToString() + " !");
             Console.ReadLine();
         }
 
@@ -103,6 +109,9 @@ namespace Minage
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
 
+            Thread surveillance = new Thread(SurveillanceGoal);
+            surveillance.Start();
+
             ThreadPool.QueueUserWorkItem(new WaitCallback(SupervisionMine2));
 
             for (int i = 0; i < nbMineurs; i++)
@@ -110,9 +119,11 @@ namespace Minage
                 ThreadPool.QueueUserWorkItem(new WaitCallback(MineurMiner2));
             }
 
+            surveillance.Join();
+
             while (estFini != true)
             {
-                if (nbSacs >= nbSacsMax)
+                if (nbSacsTotal >= nbSacsMax)
                 {
                     estFini = true;
                 }
@@ -122,16 +133,21 @@ namespace Minage
             // Get the elapsed time as a TimeSpan value.
             TimeSpan ts = stopWatch.Elapsed;
 
-            Console.WriteLine("Actuellement nous avons " + nbSacs.ToString() + " sacs avec un total de " + nbPepites.ToString() + " pépites d'or avec pour objectif " + nbSacsMax.ToString() + " sacs d'or ! Il s'agit du travail de " + nbMineurs.ToString() + " mineurs ! Durée du travail : " + ts.ToString() + " !");
+            Console.WriteLine("Actuellement nous avons " + nbSacsTotal.ToString() + " sacs avec un total de " + nbPepites.ToString() + " pépites d'or avec pour objectif " + nbSacsMax.ToString() + " sacs d'or par mineur ! Il s'agit du travail de " + nbMineurs.ToString() + " mineurs ! Durée du travail : " + ts.ToString() + " !");
             Console.ReadLine();
         }
 
         public static void MineurMiner2(Object callback)
         {
-            while (estFini != true)
+            int nbSacs = 0;
+            while (nbSacs < nbSacsMax)
             {
-                nbSacs += 1;
-                nbPepites += MinageThreads.MinagePepitesRandom(nbSacs.ToString());
+                lock (_lock)
+                {
+                    nbSacs += 1;
+                    nbPepites += MinageThreads.MinagePepitesRandom(nbSacsTotal.ToString());
+                    nbSacsTotal += 1;
+                }
             }
         }
 
@@ -139,8 +155,16 @@ namespace Minage
         {
             while (estFini != true)
             {
-                Console.WriteLine("Actuellement nous avons " + nbSacs.ToString() + " sacs avec un total de " + nbPepites.ToString() + " pépites d'or avec pour objectif " + nbSacsMax.ToString() + " sacs d'or ! Il s'agit du travail de " + nbMineurs.ToString() + " mineurs !");
+                Console.WriteLine("Actuellement nous avons " + nbSacsTotal.ToString() + " sacs avec un total de " + nbPepites.ToString() + " pépites d'or avec pour objectif " + nbSacsMax.ToString() + " sacs d'or par mineur ! Il s'agit du travail de " + nbMineurs.ToString() + " mineurs !");
                 Thread.Sleep(100);
+            }
+        }
+
+        public static void SurveillanceGoal()
+        {
+            while(nbSacsTotal < nbSacsMax*nbMineurs)
+            {
+                estFini = false;
             }
         }
 
@@ -162,9 +186,11 @@ namespace Minage
                 Console.WriteLine("Nom thread : " + threads[i].Name);*/
             }
 
+            Task.WaitAll(tasks);
+
             while (estFini != true)
             {
-                if (nbSacs >= nbSacsMax)
+                if (nbSacsTotal >= nbSacsMax)
                 {
                     estFini = true;
                 }
@@ -174,16 +200,21 @@ namespace Minage
             // Get the elapsed time as a TimeSpan value.
             TimeSpan ts = stopWatch.Elapsed;
 
-            Console.WriteLine("Actuellement nous avons " + nbSacs.ToString() + " sacs avec un total de " + nbPepites.ToString() + " pépites d'or avec pour objectif " + nbSacsMax.ToString() + " sacs d'or ! Il s'agit du travail de " + nbMineurs.ToString() + " mineurs ! Durée du travail : " + ts.ToString() + " !");
+            Console.WriteLine("Actuellement nous avons " + nbSacsTotal.ToString() + " sacs avec un total de " + nbPepites.ToString() + " pépites d'or avec pour objectif " + nbSacsMax.ToString() + " sacs d'or par mineur ! Il s'agit du travail de " + nbMineurs.ToString() + " mineurs ! Durée du travail : " + ts.ToString() + " !");
             Console.ReadLine();
         }
 
         public static void MineurMiner3()
         {
-            while (estFini != true)
+            int nbSacs = 0;
+            while (nbSacs < nbSacsMax)
             {
-                nbSacs += 1;
-                nbPepites += MinageThreads.MinagePepitesRandom(nbSacs.ToString());
+                lock (_lock)
+                {
+                    nbSacs += 1;
+                    nbPepites += MinageThreads.MinagePepitesRandom(nbSacsTotal.ToString());
+                    nbSacsTotal += 1;
+                }
             }
         }
 
@@ -191,7 +222,7 @@ namespace Minage
         {
             while (estFini != true)
             {
-                Console.WriteLine("Actuellement nous avons " + nbSacs.ToString() + " sacs avec un total de " + nbPepites.ToString() + " pépites d'or avec pour objectif " + nbSacsMax.ToString() + " sacs d'or ! Il s'agit du travail de " + nbMineurs.ToString() + " mineurs !");
+                Console.WriteLine("Actuellement nous avons " + nbSacsTotal.ToString() + " sacs avec un total de " + nbPepites.ToString() + " pépites d'or avec pour objectif " + nbSacsMax.ToString() + " sacs d'or par mineur ! Il s'agit du travail de " + nbMineurs.ToString() + " mineurs !");
                 Thread.Sleep(100);
             }
         }
