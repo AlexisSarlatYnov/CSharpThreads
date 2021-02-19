@@ -1,0 +1,7 @@
+C:\Users\alexi\Desktop\C# Avancé\Threads\Minage\Minage\bin\Debug\Minage.exe.config
+C:\Users\alexi\Desktop\C# Avancé\Threads\Minage\Minage\bin\Debug\Minage.exe
+C:\Users\alexi\Desktop\C# Avancé\Threads\Minage\Minage\bin\Debug\Minage.pdb
+C:\Users\alexi\Desktop\C# Avancé\Threads\Minage\Minage\obj\Debug\Minage.csprojAssemblyReference.cache
+C:\Users\alexi\Desktop\C# Avancé\Threads\Minage\Minage\obj\Debug\Minage.csproj.CoreCompileInputs.cache
+C:\Users\alexi\Desktop\C# Avancé\Threads\Minage\Minage\obj\Debug\Minage.exe
+C:\Users\alexi\Desktop\C# Avancé\Threads\Minage\Minage\obj\Debug\Minage.pdb
